@@ -32,6 +32,8 @@ The following rule sets provide comprehensive guidance for AL development:
 
 @al-testing.instructions.md
 
+@al-bc-patterns.instructions.md
+
 ## Key Guidelines Summary
 
 - **File Naming**: Use `<ObjectName>.<ObjectType>.al` pattern consistently
