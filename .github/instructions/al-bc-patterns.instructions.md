@@ -88,3 +88,33 @@ begin
     ThicknessAttrName := Rec."Thickness Attr. Name"; // fragile, unnecessary
 end;
 ```
+
+## Rule 2: Symbolic Object References (Page::, Codeunit::, Database::)
+
+### Intent
+Always reference AL objects by their symbolic name using the `Page::`, `Codeunit::`, `Report::`, `Database::`, `Enum::` notation instead of hardcoded numeric IDs. Symbolic references are refactor-safe, readable, and validated at compile time — numeric IDs are opaque, fragile, and break silently if objects are renumbered.
+
+### Examples
+
+```al
+// GOOD - symbolic notation, compile-time validated
+InsertTenantWebService(Page::"Fiamma B2B Sales Order API", 'fiammaB2BSalesOrders');
+
+[EventSubscriber(ObjectType::Codeunit, Codeunit::"Upgrade Tag", 'OnGetPerCompanyUpgradeTags', '', false, false)]
+
+if TenantWebService.Get(TenantWebService."Object Type"::Page, ServiceName) then
+    exit;
+```
+
+```al
+// BAD - hardcoded numeric ID, opaque and fragile
+InsertTenantWebService(50061, 'FiammaB2BSalesOrders');
+
+[EventSubscriber(ObjectType::Codeunit, 9900, 'OnGetPerCompanyUpgradeTags', '', false, false)]
+```
+
+### Anti-patterns to avoid
+
+- Never pass a Page/Codeunit/Report ID as an integer literal where a symbolic reference is available
+- Never use numeric IDs in `EventSubscriber` attributes — always use `Codeunit::"..."`, `Table::"..."` etc.
+- Never use `Database::` with a numeric literal — use the table name: `Database::"Sales Header"`
