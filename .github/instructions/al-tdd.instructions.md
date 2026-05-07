@@ -46,7 +46,7 @@ Treat deployment as mandatory before test execution in BC environments.
 
 - Publish **App** project first
 - Publish **Test** project second (depends on App)
-- Run tests via Page 130401 **"Test Runner Mgt."**, AL-Go `Run-Tests`, or GitHub Actions
+- Run tests via the standard BC test runner page (Page 130401), AL-Go `Run-Tests`, or GitHub Actions
 - Record test result before moving to refactor
 
 ## Rule 5: Refactor with Safety Net (Refactor Phase)
@@ -78,4 +78,3 @@ Enforce TDD quality gates in automation.
 - Configure AL-Go to execute tests during validation workflows
 - Treat failing tests as merge blockers
 - Keep pipeline and project settings aligned (for example `al.code-workspace` and `.AL-Go/settings.json`)
-
