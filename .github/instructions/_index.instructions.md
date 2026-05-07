@@ -50,6 +50,7 @@ The AI Coding rules are organized into logical categories to make them easy to f
 - **[AL Error Handling & Troubleshooting](al-error-handling.instructions.md/)** - Try/catch patterns, debugging, and telemetry integration
 - **[AL Event-Driven Development](al-events.instructions.md/)** - Event subscribers, integration events, and extensibility patterns
 - **[AL Testing & Project Structure](al-testing.instructions.md/)** - AL-Go workspace structure, test generation, and project organization
+- **[AL TDD - Red Green Refactor](al-tdd.instructions.md/)** - Test-first workflow, deploy-before-test, and CI quality gates
 
 ## Getting Started
 
