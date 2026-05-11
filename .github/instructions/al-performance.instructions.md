@@ -71,7 +71,7 @@ Item.FindFirst();
 ```
 
 ```al
-// Bad example (avoid SetLoadFields after filtering)
+// Bad example (avoid SetLoadFields before filtering)
 Item.SetLoadFields("Item Category Code");
 Item.SetRange("Third Party Item Exists", false);
 Item.FindFirst();
