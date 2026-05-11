@@ -161,4 +161,60 @@ begin
                       TelemetryScope::ExtensionPublisher, TelemetryCustomDimensions);
   end;
 end;
-``` 
+```
+
+## Rule 5: Telemetry Conventions
+
+### Intent
+Follow consistent conventions for telemetry events so they are discoverable, actionable, and privacy-safe. These conventions mirror the patterns used in standard BC telemetry.
+
+- **DataClassification must be `SystemMetadata`** — any other value causes the event to be silently suppressed by the BC server and never reach Application Insights. Never log customer or personal data.
+- **EventId must be unique and prefixed** — use a short app-specific prefix plus a zero-padded number (e.g. `MyApp-0001`). EventIds are an API: changing them is a breaking change.
+- **Message follows "Object ActionInPastTense" pattern** — e.g. `'Sales document posted'`, `'Payment processing failed'`. Include key dimension values in the message so events are readable without opening custom dimensions.
+- **Custom dimension key names use PascalCase** — the BC server automatically prefixes them with `al` in Application Insights (e.g. key `DocumentType` appears as `alDocumentType`). Never use spaces in dimension key names.
+- **Use `TelemetryScope::ExtensionPublisher`** to send only to your app's Application Insights resource. Use `TelemetryScope::All` only when the event is also relevant for the environment administrator.
+
+### Examples
+
+```al
+// Good example - All conventions applied
+procedure ProcessPayment(PaymentAmount: Decimal; CustomerNo: Code[20])
+var
+  Dimensions: Dictionary of [Text, Text];
+  PaymentProcessedMsg: Label 'Payment processed', Locked = true;
+  PaymentFailedMsg: Label 'Payment processing failed', Locked = true;
+begin
+  Dimensions.Add('CustomerNo', CustomerNo);
+  Dimensions.Add('Amount', Format(PaymentAmount));
+
+  if TryProcessPaymentInternal(PaymentAmount) then
+    Session.LogMessage(
+      'MyApp-0001',                          // unique, prefixed EventId
+      PaymentProcessedMsg,                   // "Object ActionInPastTense"
+      Verbosity::Normal,
+      DataClassification::SystemMetadata,    // REQUIRED — other values suppress the event
+      TelemetryScope::ExtensionPublisher,
+      Dimensions)                            // PascalCase keys → alCustomerNo, alAmount in AI
+  else begin
+    Dimensions.Add('ErrorText', GetLastErrorText());
+    Session.LogMessage(
+      'MyApp-0002',
+      PaymentFailedMsg,
+      Verbosity::Error,
+      DataClassification::SystemMetadata,
+      TelemetryScope::ExtensionPublisher,
+      Dimensions);
+  end;
+end;
+```
+
+```al
+// Bad example - common mistakes
+Session.LogMessage(
+  'Error',                              // BAD: not unique, no prefix
+  'Something went wrong for ' + CustomerName,  // BAD: embeds customer data
+  Verbosity::Error,
+  DataClassification::CustomerContent, // BAD: event is silently suppressed
+  TelemetryScope::All,                 // BAD: unnecessarily broad scope
+  'customer name', CustomerName);      // BAD: spaces in key, personal data in value
+```

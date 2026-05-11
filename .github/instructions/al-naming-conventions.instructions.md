@@ -64,14 +64,17 @@ SalesPostingTests.Codeunit.al
 ### Intent
 Use consistent naming conventions for variables and functions to improve code readability. Use PascalCase for variable and function names, descriptive names that clearly indicate purpose, and avoid abbreviations unless they are well-known business terms. Use consistent parameter naming in procedures.
 
+**Temporary variables must use the `Temp` prefix.** This is an official Microsoft requirement — it signals to readers and tools that the variable uses a temporary table and is not persisted to the database.
+
 ### Examples
 
 ```al
 // Good examples - Variables
 var
   CustomerLedgerEntry: Record "Cust. Ledger Entry";
+  TempSalesLine: Record "Sales Line" temporary;    // Temp prefix required
+  TempItemBuffer: Record "Item Buffer" temporary;  // Temp prefix required
   TotalAmount: Decimal;
-  DiscountPercentage: Decimal;
   IsValidTransaction: Boolean;
 ```
 
