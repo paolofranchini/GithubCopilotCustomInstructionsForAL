@@ -15,6 +15,7 @@ This directory contains AI-optimized coding rules for AL development. Each rule 
 ├── al-error-handling.instructions.md         # Error handling patterns and troubleshooting
 ├── al-events.instructions.md                 # Event-driven development and extensibility
 ├── al-testing.instructions.md                # AL-Go workspace structure and testing guidelines
+├── al-tdd.instructions.md                    # TDD workflow (Red-Green-Refactor), deploy, and test execution rules
 ```
 
 ## How to Add New Rules

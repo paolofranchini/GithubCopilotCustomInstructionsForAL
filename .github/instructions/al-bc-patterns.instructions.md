@@ -118,3 +118,101 @@ InsertTenantWebService(50061, 'FiammaB2BSalesOrders');
 - Never pass a Page/Codeunit/Report ID as an integer literal where a symbolic reference is available
 - Never use numeric IDs in `EventSubscriber` attributes — always use `Codeunit::"..."`, `Table::"..."` etc.
 - Never use `Database::` with a numeric literal — use the table name: `Database::"Sales Header"`
+
+## Rule 3: DataClassification on All Table Fields
+
+### Intent
+Every field in every table must have an explicit `DataClassification` property set. Fields left as `ToBeClassified` violate AppSourceCop rule AS0016 and block AppSource submission. Choose the classification that reflects the sensitivity of the data stored in that field.
+
+**Critical for telemetry**: Only `DataClassification::SystemMetadata` is safe to include in `Session.LogMessage` calls — any other classification causes the event to be silently suppressed and never reach Application Insights.
+
+### Examples
+
+```al
+// Good example - All fields explicitly classified
+table 50100 "My Setup"
+{
+    fields
+    {
+        field(1; "Primary Key"; Code[10])
+        {
+            DataClassification = SystemMetadata;
+        }
+        field(2; "Customer Name"; Text[100])
+        {
+            DataClassification = CustomerContent;
+        }
+        field(3; "Contact Email"; Text[80])
+        {
+            DataClassification = EndUserIdentifiableInformation;
+        }
+        field(4; "API Endpoint"; Text[250])
+        {
+            DataClassification = SystemMetadata;
+        }
+    }
+}
+```
+
+```al
+// Bad example - Missing DataClassification (AS0016 violation)
+table 50100 "My Setup"
+{
+    fields
+    {
+        field(1; "Primary Key"; Code[10]) { }       // ToBeClassified - WRONG
+        field(2; "Customer Name"; Text[100]) { }    // ToBeClassified - WRONG
+    }
+}
+```
+
+### DataClassification reference
+
+| Value | Use for |
+|---|---|
+| `SystemMetadata` | Technical keys, status flags, system-generated values — safe in telemetry |
+| `CustomerContent` | User-entered business data (amounts, descriptions, dates) |
+| `EndUserIdentifiableInformation` | Personal data (name, email, phone) — GDPR sensitive |
+| `OrganizationIdentifiableInformation` | Company-level identifying data |
+| `AccountData` | Financial account information |
+
+## Rule 4: PermissionSet Objects for All Tables
+
+### Intent
+Every extension must ship AL `permissionset` objects that cover all tables it defines. AppSourceCop rule AS0103 enforces this. Use AL `permissionset`/`permissionsetextension` objects — not XML permission files — as they are source-controllable, version-tracked, and the current Microsoft standard. Create at least one assignable permission set per app covering all tables.
+
+### Examples
+
+```al
+// Good example - AL PermissionSet covering all extension tables
+permissionset 50100 "My App - Basic"
+{
+    Assignable = true;
+    Caption = 'My App - Basic', Locked = true;
+    Permissions =
+        tabledata "My Setup" = R,
+        tabledata "My Document Header" = RIMD,
+        tabledata "My Document Line" = RIMD;
+}
+```
+
+```al
+// Good example - Extend an existing permission set
+permissionsetextension 50101 "My App D365 Basic Ext" extends "D365 BASIC"
+{
+    Permissions =
+        tabledata "My Setup" = R,
+        tabledata "My Document Header" = RIMD;
+}
+```
+
+```al
+// Bad example - No permission set (AS0103 violation)
+// App ships tables but no permissionset object — users get runtime permission errors
+```
+
+### Anti-patterns to avoid
+
+- Never ship only XML-based permission files for new extensions — use AL `permissionset` objects
+- Never set `Assignable = false` on the only permission set in an app — at least one must be assignable
+- Never forget to update the permissionset when adding new tables to the data model

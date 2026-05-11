@@ -15,16 +15,6 @@ All upgrade codeunits must follow this exact structure:
 codeunit [ID] [CodeunitName]
 {
     Subtype = Upgrade;
-    
-    trigger OnCheckPreconditionsPerCompany()
-    begin
-        // Your code here
-    end;
-
-    trigger OnCheckPreconditionsPerDatabase()
-    begin
-        // Your code here
-    end;
 
     trigger OnUpgradePerCompany()
     begin
@@ -32,16 +22,6 @@ codeunit [ID] [CodeunitName]
     end;
 
     trigger OnUpgradePerDatabase()
-    begin
-        // Your code here
-    end;
-
-    trigger OnValidateUpgradePerCompany()
-    begin
-        // Your code here
-    end;
-
-    trigger OnValidateUpgradePerDatabase()
     begin
         // Your code here
     end;

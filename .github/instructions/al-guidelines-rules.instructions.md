@@ -34,15 +34,22 @@ The following rule sets provide comprehensive guidance for AL development:
 
 @al-bc-patterns.instructions.md
 
+@al-tdd.instructions.md
+
 ## Key Guidelines Summary
 
 - **File Naming**: Use `<ObjectName>.<ObjectType>.al` pattern consistently
-- **Code Style**: Use two space indentation and PascalCase for variables, PascalCase for objects
+- **Code Style**: Use 4-space indentation (Microsoft AL standard) and PascalCase for variables and objects; follow mandatory object file structure order (Properties → Constructs → Labels → Variables → Methods)
+- **UI Strings**: Sentence case when a verb is present; title case for noun phrases
 - **Folder Structure**: Organize by feature (`src/feature/subfeature/`) not by object type
 - **Performance**: Filter data early, use temporary tables, avoid unnecessary loops
 - **Events**: Prefer integration events over direct modifications for extensibility
-- **Testing**: Separate App and Test projects, generate tests only when requested
+- **Testing**: Separate App and Test projects, generate tests only when requested, always follow TDD when tests are requested
 - **Error Handling**: Use TryFunctions, provide meaningful error messages, implement telemetry
+- **Telemetry**: Always use `DataClassification::SystemMetadata`, unique prefixed EventIds, PascalCase dimension keys, "Object ActionInPastTense" message pattern
+- **DataClassification**: Every table field must have an explicit `DataClassification` property (AS0016)
+- **PermissionSets**: Every extension must ship AL `permissionset` objects covering all its tables (AS0103)
+- **Temporary Variables**: Prefix all temporary record variables with `Temp`
 
 ## AL-Go Workspace Structure
 

@@ -10,7 +10,7 @@ These rules ensure consistent code structure and organization across AL projects
 ## Style guidelines for AL code
   - Always use PascalCase for variable and function names.
   - Use PascalCase for object names (e.g., tables, pages, reports).
-  - Maintain a consistent indentation style (2 spaces preferred).
+  - Maintain a consistent indentation style (4 spaces, per Microsoft AL standard).
 
 ## Commonly used methods and patterns
   - Temporary tables for performance optimization
@@ -19,7 +19,7 @@ These rules ensure consistent code structure and organization across AL projects
 ## Rule 1: Consistent Indentation and Formatting
 
 ### Intent
-Maintain consistent code formatting to improve readability and enable better AI understanding of code structure. Use indentation with two spaces consistently throughout your project and maintain consistent formatting within functions and procedures.
+Maintain consistent code formatting to improve readability and enable better AI understanding of code structure. Use 4-space indentation throughout your project, consistent with the official Microsoft AL standard. Maintain consistent formatting within functions and procedures.
 
 ### Examples
 
@@ -161,4 +161,98 @@ begin
   // All validation, calculation, and posting logic in one procedure
   // ... 200+ lines of mixed concerns
 end;
-``` 
+```
+
+## Rule 5: AL Object Internal File Structure
+
+### Intent
+Every AL object file must follow the mandatory ordering defined by Microsoft. Violating this order reduces readability and can cause unexpected behaviour with tools like the AL Formatter.
+
+The required sequence inside any AL object is:
+1. **Properties** (e.g. `Subtype`, `TableType`, `Access`)
+2. **Object-specific constructs** in this order:
+   - Table fields
+   - Page layout
+   - Actions
+   - Triggers
+3. **Global variables**
+   - Labels first
+   - Other global variables
+4. **Methods** (procedures and functions)
+
+### Examples
+
+```al
+// Good example - Correct object structure order
+codeunit 50100 "Sales Document Validator"
+{
+    // 1. Properties
+    Access = Public;
+
+    // 2. Triggers
+    trigger OnRun()
+    begin
+        ValidateAll();
+    end;
+
+    // 3. Global variables — Labels first, then others
+    var
+        DocumentValidatedMsg: Label 'Document %1 validated.', Comment = '%1 = Document No.';
+        ValidationFailedErr: Label 'Validation failed: %1', Comment = '%1 = reason';
+        IsInitialized: Boolean;
+
+    // 4. Methods
+    procedure ValidateAll()
+    begin
+        // implementation
+    end;
+
+    local procedure Initialize()
+    begin
+        IsInitialized := true;
+    end;
+}
+```
+
+## Rule 6: UI String Casing Conventions
+
+### Intent
+Use consistent casing for all user-facing labels, captions, and tooltips to maintain a professional and native BC look.
+
+- **Sentence case** when the string contains a verb or reads as a sentence: `'Calculate total'`, `'Post document'`, `'Turn index off'`
+- **Title case** when the string is a noun phrase without a verb: `'Customer Card'`, `'General Ledger'`, `'Sales Order'`
+
+### Examples
+
+```al
+// Good examples
+action(PostDocument)
+{
+    Caption = 'Post document';          // verb present → sentence case
+    ToolTip = 'Post the sales document.';
+}
+
+field("Customer Name"; Rec."Customer Name")
+{
+    Caption = 'Customer Name';          // noun phrase → title case
+    ToolTip = 'Specifies the name of the customer.';
+}
+
+action(CalculateDiscount)
+{
+    Caption = 'Calculate discount';     // verb present → sentence case
+}
+```
+
+```al
+// Bad examples
+action(PostDocument)
+{
+    Caption = 'Post Document';          // BAD: title case with verb
+}
+
+field("Customer Name"; Rec."Customer Name")
+{
+    Caption = 'customer name';          // BAD: all lowercase
+}
+```
