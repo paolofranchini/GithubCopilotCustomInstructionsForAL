@@ -53,7 +53,8 @@ Control when and how test code is generated to maintain focus on main applicatio
 - DO NOT automatically generate test code unless explicitly requested
 - Focus on main application implementation by default
 - When user asks for implementation create only the main application objects
-- Only generate test files when user specifically requests "Create tests for...", "Generate unit tests...", "Add test coverage...", or "Write tests..."
+- Only generate test files when user specifically requests "Create tests for...", "Generate unit tests...", "Add test coverage...", "Write tests...", or "include tests"
+- When tests are requested, always follow the TDD (Red-Green-Refactor) workflow defined in al-tdd.instructions.md — the TDD rules are the only testing approach used
 - If tests are requested, place them in the Test project following the folder structure where test files should mirror the App project structure but in the Test project
 - Unless the user explicitly requests tests, focus only on main application implementation
 

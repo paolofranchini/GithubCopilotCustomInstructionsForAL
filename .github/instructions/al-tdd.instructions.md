@@ -21,7 +21,7 @@ Never skip a phase.
 ## Rule 2: Write the Test First (Red Phase)
 
 ### Intent
-When implementing a new feature, create the test codeunit before implementation code.
+When the user explicitly requests tests (e.g. "include tests", "write tests", "create tests"), create the test codeunit before implementation code and follow the full Red-Green-Refactor cycle. Do not start the TDD workflow unless tests are explicitly requested.
 
 - Use descriptive Given/When/Then test names
 - Assert behavior that is not implemented yet
