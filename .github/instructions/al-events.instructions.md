@@ -26,3 +26,8 @@ local procedure ValidateOnBeforeInsertSalesHeader(var SalesHeader: Record "Sales
 - Pass records `var` so subscribers can modify them.
 - Include enough context (header, lines, dates, resulting document no., success flag) without passing unnecessary heavy data.
 - Use descriptive parameter names matching the record/table.
+
+## Rule 4: Keep extension objects thin
+
+- `tableextension` triggers (`OnInsert`, `OnModify`, field `OnValidate`) must stay minimal: no posting, no external calls, no heavy queries — that logic runs on every write of the base table.
+- Put business logic in a dedicated codeunit and invoke it from an event subscriber; the same applies to `pageextension` triggers.

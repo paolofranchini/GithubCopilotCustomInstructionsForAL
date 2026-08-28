@@ -1,6 +1,6 @@
 ---
 description: TDD (Red-Green-Refactor) workflow and rules for AL development
-applyTo: "*.al"
+applyTo: "**/Test/**/*.al,**/*Test*.al"
 ---
 
 # AL TDD (Red-Green-Refactor) Rules

@@ -5,11 +5,12 @@ applyTo: "*.al"
 
 # Naming Conventions Rules
 
-## Rule 1: Object names
+## Rule 1: Object names and IDs
 
 - PascalCase, descriptive, no cryptic abbreviations.
 - Max 30 chars total, keep the name itself ≤ 26 chars to leave room for the affix.
 - Good: `"Customer Ledger Entry"`, `"Sales Invoice Posting"`. Bad: `"CustLE"`, `"SIPoster"`.
+- **Never invent object IDs**: take the next free ID inside `idRanges` in `app.json`, and apply the prefix/suffix declared in `mandatoryAffixes` to every new object, field, action and control.
 
 ## Rule 2: File names
 
@@ -25,8 +26,9 @@ applyTo: "*.al"
 
 ## Rule 4: Event subscriber parameters and names
 
-- Use the table/record name as parameter name (`SalesHeader`, `Customer`, `xCustomer`), never generic `Rec`.
-- Name the subscriber `<Action>On<Event><Object>`, e.g. `AddDefaultValuesOnBeforeInsertSalesHeader`.
+- Subscriber parameter names **must match the published event signature**: for standard table events (`OnAfterInsertEvent`, `OnBeforeModifyEvent`, ...) they are literally `Rec`, `xRec`, `RunTrigger` — renaming them does not compile.
+- For integration events you publish, name the parameters after the record/table (`SalesHeader`, `Customer`, `xCustomer`), never a generic `Rec`.
+- Name the subscriber procedure `<Action>On<Event><Object>`, e.g. `AddDefaultValuesOnBeforeInsertSalesHeader`.
 
 ## Rule 5: Interfaces and implementations
 

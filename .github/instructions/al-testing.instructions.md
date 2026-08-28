@@ -1,6 +1,6 @@
 ---
 description: AL-Go workspace structure, test generation guidelines, and project organization rules
-applyTo: "*.al"
+applyTo: "*.al,*.json"
 ---
 
 # AL Testing & Project Structure Rules

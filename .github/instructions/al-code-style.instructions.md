@@ -37,3 +37,9 @@ applyTo: "*.al"
 - **Sentence case** when the string contains a verb: `'Post document'`, `'Calculate discount'`.
 - **Title case** for noun phrases: `'Customer Name'`, `'Sales Order'`.
 - Never use all-lowercase captions.
+
+## Rule 7: Page fields and actions
+
+- Every field and action needs `ApplicationArea` (AS0018) and `ToolTip` (AS0044) — missing ones break AppSource validation.
+- ToolTip on fields starts with "Specifies …" and ends with a period; on actions it describes the effect (`'Post the sales document.'`).
+- Add `Caption` whenever the property name is not already a good UI string; add `Image` and `Promoted` metadata on primary actions.

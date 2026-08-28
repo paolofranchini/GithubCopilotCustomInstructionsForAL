@@ -1,6 +1,6 @@
 ---
 description: Guidelines for writing and handling upgrade code
-applyTo: "*.al"
+applyTo: "**/*Upgrade*.al,**/Upgrade/**/*.al,**/*Install*.al"
 ---
 
 # AL Upgrade Code Rules

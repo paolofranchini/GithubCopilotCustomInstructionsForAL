@@ -36,7 +36,8 @@ field(81; "Thickness Attr. Name"; Text[250]) { }
 ## Rule 3: DataClassification on every field
 
 - Every table field needs an explicit `DataClassification` (missing one = `ToBeClassified`, AppSourceCop AS0016).
-- `SystemMetadata` (technical keys, flags — the only value usable in telemetry) · `CustomerContent` (business data) · `EndUserIdentifiableInformation` (personal data) · `OrganizationIdentifiableInformation` · `AccountData`.
+- `SystemMetadata` (technical keys, flags) · `CustomerContent` (business data) · `EndUserIdentifiableInformation` (personal data) · `OrganizationIdentifiableInformation` · `AccountData`.
+- For the classification required by telemetry see al-error-handling.instructions.md.
 
 ## Rule 4: PermissionSet objects
 

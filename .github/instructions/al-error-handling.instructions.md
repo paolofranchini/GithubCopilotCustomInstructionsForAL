@@ -28,7 +28,13 @@ end;
 
 - Keep the intended business logic even if an object/procedure name or event signature needs manual verification; do not alter behaviour just to make code compile.
 
-## Rule 4 & 5: Telemetry
+## Rule 4: Actionable errors and UI safety
+
+- When the user can fix the problem, raise an `ErrorInfo` with `AddAction`/`AddNavigation` and `DataClassification`, instead of a plain `Error()`.
+- Guard every `Message`, `Confirm`, `StrMenu` and page `RunModal` with `if GuiAllowed then` — they fail in background sessions, jobs and upgrade code.
+- Never call `Commit()` to work around a locking or validation problem: it breaks the transaction boundary and test isolation. Use it only when starting an external call or a separate `Codeunit.Run`, with a comment explaining why.
+
+## Rule 5: Telemetry
 
 Add `Session.LogMessage` telemetry only when the user explicitly asks for it, and follow these conventions:
 
