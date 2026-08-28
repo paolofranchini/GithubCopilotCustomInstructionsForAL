@@ -5,26 +5,19 @@ applyTo: "*.al"
 
 # AL Business Central Patterns
 
-Proven patterns based on how standard Business Central handles common field scenarios.
+## Rule 1: ID + Name field pair (lookup with readable description)
 
-## Rule 1: ID + Name Field Pair (lookup con descrizione leggibile)
+To reference another table by key but display a readable name: Integer/Code **ID field** with `TableRelation` + a separate **Text Name field** filled in the ID field's `OnValidate`. On the page show only the Name field with a custom `OnLookup`.
 
-### Intent
-When a setup or master table needs to reference another table by its primary key but display a human-readable name, use an Integer ID field with `TableRelation` and a separate Text Name field updated via `OnValidate`. On the page show only the Name field with a custom `OnLookup`.
-
-**Never use FlowField for the Name** — FlowFields do not refresh on the page automatically without an explicit `CalcFields` call, requiring workarounds like page variables, `OnAfterGetRecord`, or `CurrPage.Update` that are fragile and unnecessary.
-
-### Table pattern
+- **Never use a FlowField for the Name** — it does not refresh on the page without `CalcFields`, forcing fragile workarounds (page variables, `OnAfterGetRecord`, `CurrPage.Update`).
+- Do not set `Editable = false` on the Name field: it would block `OnLookup`.
+- In `OnLookup`, call `Rec.Validate("<...> ID", ...)` and assign `Text := Rec."<...> Name"` (BC uses `Text` to refresh the displayed value), then `exit(true)`.
 
 ```al
 field(80; "Thickness Attr. ID"; Integer)
 {
-    Caption = 'Thickness Attribute';
     TableRelation = "Item Attribute";
-
     trigger OnValidate()
-    var
-        ItemAttribute: Record "Item Attribute";
     begin
         if ItemAttribute.Get("Thickness Attr. ID") then
             "Thickness Attr. Name" := ItemAttribute.Name
@@ -32,187 +25,21 @@ field(80; "Thickness Attr. ID"; Integer)
             "Thickness Attr. Name" := '';
     end;
 }
-field(81; "Thickness Attr. Name"; Text[250])
-{
-    Caption = 'Thickness Attribute Name';
-    // Do NOT set Editable = false here — it would prevent OnLookup from firing on the page.
-    // The field is only written by the OnValidate of the ID field above.
-}
+field(81; "Thickness Attr. Name"; Text[250]) { }
 ```
 
-### Page pattern
+## Rule 2: Symbolic object references
 
-Show only the Name field bound to `Rec."... Attr. Name"`. The `OnLookup` opens the list page, calls `Rec.Validate("... Attr. ID", ...)`, and the `OnValidate` on the table updates the Name automatically. No page variables, no `OnAfterGetRecord`, no `CurrPage.Update` needed.
+- Always use `Page::`, `Codeunit::`, `Report::`, `Table::`, `Database::`, `Enum::` with the object name — never numeric literals, including in `[EventSubscriber]` attributes.
+- Good: `Codeunit::"Upgrade Tag"`, `Database::"Sales Header"`, `Page::"My API"`. Bad: `9900`, `50061`.
 
-```al
-field("Thickness Attr. Name"; Rec."Thickness Attr. Name")
-{
-    ApplicationArea = All;
-    Caption = 'Thickness Attribute';
-    ToolTip = 'Specifies the Item Attribute used for thickness.';
+## Rule 3: DataClassification on every field
 
-    trigger OnLookup(var Text: Text): Boolean
-    var
-        ItemAttribute: Record "Item Attribute";
-        ItemAttrPage: Page "Item Attributes";
-    begin
-        if Rec."Thickness Attr. ID" <> 0 then
-            if ItemAttribute.Get(Rec."Thickness Attr. ID") then
-                ItemAttrPage.SetRecord(ItemAttribute);
-        ItemAttrPage.LookupMode(true);
-        if ItemAttrPage.RunModal() = Action::LookupOK then begin
-            ItemAttrPage.GetRecord(ItemAttribute);
-            Rec.Validate("Thickness Attr. ID", ItemAttribute.ID);
-            Text := Rec."Thickness Attr. Name"; // REQUIRED: BC uses Text to update the displayed field value
-            exit(true);
-        end;
-        exit(false);
-    end;
-}
-```
+- Every table field needs an explicit `DataClassification` (missing one = `ToBeClassified`, AppSourceCop AS0016).
+- `SystemMetadata` (technical keys, flags — the only value usable in telemetry) · `CustomerContent` (business data) · `EndUserIdentifiableInformation` (personal data) · `OrganizationIdentifiableInformation` · `AccountData`.
 
-### Anti-patterns to avoid
+## Rule 4: PermissionSet objects
 
-```al
-// BAD - FlowField does not refresh automatically on the page
-field(81; "Thickness Attr. Name"; Text[250])
-{
-    FieldClass = FlowField;
-    CalcFormula = lookup("Item Attribute".Name where(ID = field("Thickness Attr. ID")));
-    Editable = false;
-}
-
-// BAD - Page variable workaround needed only because of the FlowField mistake
-trigger OnAfterGetRecord()
-begin
-    ThicknessAttrName := Rec."Thickness Attr. Name"; // fragile, unnecessary
-end;
-```
-
-## Rule 2: Symbolic Object References (Page::, Codeunit::, Database::)
-
-### Intent
-Always reference AL objects by their symbolic name using the `Page::`, `Codeunit::`, `Report::`, `Database::`, `Enum::` notation instead of hardcoded numeric IDs. Symbolic references are refactor-safe, readable, and validated at compile time — numeric IDs are opaque, fragile, and break silently if objects are renumbered.
-
-### Examples
-
-```al
-// GOOD - symbolic notation, compile-time validated
-InsertTenantWebService(Page::"Fiamma B2B Sales Order API", 'fiammaB2BSalesOrders');
-
-[EventSubscriber(ObjectType::Codeunit, Codeunit::"Upgrade Tag", 'OnGetPerCompanyUpgradeTags', '', false, false)]
-
-if TenantWebService.Get(TenantWebService."Object Type"::Page, ServiceName) then
-    exit;
-```
-
-```al
-// BAD - hardcoded numeric ID, opaque and fragile
-InsertTenantWebService(50061, 'FiammaB2BSalesOrders');
-
-[EventSubscriber(ObjectType::Codeunit, 9900, 'OnGetPerCompanyUpgradeTags', '', false, false)]
-```
-
-### Anti-patterns to avoid
-
-- Never pass a Page/Codeunit/Report ID as an integer literal where a symbolic reference is available
-- Never use numeric IDs in `EventSubscriber` attributes — always use `Codeunit::"..."`, `Table::"..."` etc.
-- Never use `Database::` with a numeric literal — use the table name: `Database::"Sales Header"`
-
-## Rule 3: DataClassification on All Table Fields
-
-### Intent
-Every field in every table must have an explicit `DataClassification` property set. Fields left as `ToBeClassified` violate AppSourceCop rule AS0016 and block AppSource submission. Choose the classification that reflects the sensitivity of the data stored in that field.
-
-**Critical for telemetry**: Only `DataClassification::SystemMetadata` is safe to include in `Session.LogMessage` calls — any other classification causes the event to be silently suppressed and never reach Application Insights.
-
-### Examples
-
-```al
-// Good example - All fields explicitly classified
-table 50100 "My Setup"
-{
-    fields
-    {
-        field(1; "Primary Key"; Code[10])
-        {
-            DataClassification = SystemMetadata;
-        }
-        field(2; "Customer Name"; Text[100])
-        {
-            DataClassification = CustomerContent;
-        }
-        field(3; "Contact Email"; Text[80])
-        {
-            DataClassification = EndUserIdentifiableInformation;
-        }
-        field(4; "API Endpoint"; Text[250])
-        {
-            DataClassification = SystemMetadata;
-        }
-    }
-}
-```
-
-```al
-// Bad example - Missing DataClassification (AS0016 violation)
-table 50100 "My Setup"
-{
-    fields
-    {
-        field(1; "Primary Key"; Code[10]) { }       // ToBeClassified - WRONG
-        field(2; "Customer Name"; Text[100]) { }    // ToBeClassified - WRONG
-    }
-}
-```
-
-### DataClassification reference
-
-| Value | Use for |
-|---|---|
-| `SystemMetadata` | Technical keys, status flags, system-generated values — safe in telemetry |
-| `CustomerContent` | User-entered business data (amounts, descriptions, dates) |
-| `EndUserIdentifiableInformation` | Personal data (name, email, phone) — GDPR sensitive |
-| `OrganizationIdentifiableInformation` | Company-level identifying data |
-| `AccountData` | Financial account information |
-
-## Rule 4: PermissionSet Objects for All Tables
-
-### Intent
-Every extension must ship AL `permissionset` objects that cover all tables it defines. AppSourceCop rule AS0103 enforces this. Use AL `permissionset`/`permissionsetextension` objects — not XML permission files — as they are source-controllable, version-tracked, and the current Microsoft standard. Create at least one assignable permission set per app covering all tables.
-
-### Examples
-
-```al
-// Good example - AL PermissionSet covering all extension tables
-permissionset 50100 "My App - Basic"
-{
-    Assignable = true;
-    Caption = 'My App - Basic', Locked = true;
-    Permissions =
-        tabledata "My Setup" = R,
-        tabledata "My Document Header" = RIMD,
-        tabledata "My Document Line" = RIMD;
-}
-```
-
-```al
-// Good example - Extend an existing permission set
-permissionsetextension 50101 "My App D365 Basic Ext" extends "D365 BASIC"
-{
-    Permissions =
-        tabledata "My Setup" = R,
-        tabledata "My Document Header" = RIMD;
-}
-```
-
-```al
-// Bad example - No permission set (AS0103 violation)
-// App ships tables but no permissionset object — users get runtime permission errors
-```
-
-### Anti-patterns to avoid
-
-- Never ship only XML-based permission files for new extensions — use AL `permissionset` objects
-- Never set `Assignable = false` on the only permission set in an app — at least one must be assignable
-- Never forget to update the permissionset when adding new tables to the data model
+- Ship AL `permissionset` / `permissionsetextension` objects covering all tables of the extension (AS0103); never XML permission files.
+- At least one permission set must have `Assignable = true`; use `Caption = '...', Locked = true`.
+- Update the permission set whenever a table is added.

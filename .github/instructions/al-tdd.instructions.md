@@ -5,76 +5,34 @@ applyTo: "*.al"
 
 # AL TDD (Red-Green-Refactor) Rules
 
-These rules define a strict test-driven development workflow for AL projects in Business Central, including deploy and test execution expectations.
+Apply this workflow only when the user explicitly asks for tests. Never skip a phase.
 
-## Rule 1: TDD Workflow Overview (Red-Green-Refactor)
+## 1. Red — test first
 
-### Intent
-Follow the full TDD loop for every new behavior:
+- Write the failing test before any implementation code.
+- Descriptive Given/When/Then name, one behaviour per test; it must compile and fail at runtime.
 
-1. 🔴 **Red**: write a failing test for behavior that does not exist yet
-2. 🟢 **Green**: write the minimum implementation, publish the app, and run tests until they pass
-3. 🔵 **Refactor**: improve code design without changing behavior, then run tests again
+## 2. Green — minimum implementation
 
-Never skip a phase.
+- Implement only what the failing test requires; no speculative abstractions.
+- Publish App first, then Test, then run the tests until they pass consistently.
 
-## Rule 2: Write the Test First (Red Phase)
+## 3. Refactor
 
-### Intent
-When the user explicitly requests tests (e.g. "include tests", "write tests", "create tests"), create the test codeunit before implementation code and follow the full Red-Green-Refactor cycle. Do not start the TDD workflow unless tests are explicitly requested.
+- Only with green tests; behaviour must stay unchanged (extract procedure, rename, extract constants).
+- Re-run tests after each refactor step; fix regressions immediately.
 
-- Use descriptive Given/When/Then test names
-- Assert behavior that is not implemented yet
-- The test should compile but fail at runtime during the Red phase
-- Keep test focus narrow: one behavior per test
+## 4. Deploy & run
 
-## Rule 3: Minimum Implementation to Pass (Green Phase)
+- Publishing is mandatory before test execution (App → Test).
+- Run via test runner page 130401, AL-Go `Run-Tests`, or GitHub Actions.
 
-### Intent
-After the failing test exists, implement only what is needed to make the test pass.
+## 5. Isolation
 
-- Avoid over-engineering and speculative abstractions
-- Add only the smallest behavior required by the failing test
-- Publish to BC environment (container/sandbox via AL-Go or VS Code publish)
-- Execute tests after publish (BCCT, Test Runner page, or AL-Go CI)
-- Green means the relevant assertions pass consistently
+- Each test independent, deterministic, order-agnostic.
+- Use `[HandlerFunctions]` for dialogs/confirms/messages, create and clean data within the test lifecycle, keep setup explicit.
 
-## Rule 4: Deploy Workflow Before Running Tests
+## 6. CI/CD
 
-### Intent
-Treat deployment as mandatory before test execution in BC environments.
-
-- Publish **App** project first
-- Publish **Test** project second (depends on App)
-- Run tests via the standard BC test runner page (Page 130401), AL-Go `Run-Tests`, or GitHub Actions
-- Record test result before moving to refactor
-
-## Rule 5: Refactor with Safety Net (Refactor Phase)
-
-### Intent
-Refactor only after tests are green and keep behavior unchanged.
-
-- Do not add new functionality during refactoring
-- Apply safe refactors (extract procedure, rename symbols, extract constants)
-- Re-run tests after each meaningful refactor step
-- Stop and fix immediately if any test regresses
-
-## Rule 6: Test Isolation and Independence
-
-### Intent
-Ensure every test is independent, deterministic, and repeatable.
-
-- Use `[HandlerFunctions]` for dialog/confirm/message handling when needed
-- Create and clean test data inside each test lifecycle (`[TearDown]`, helper codeunits, or `LibraryVariableStorage`)
-- Do not depend on execution order or shared mutable state
-- Keep setup explicit to avoid hidden coupling
-
-## Rule 7: TDD in AL-Go CI/CD
-
-### Intent
-Enforce TDD quality gates in automation.
-
-- Run automated tests in CI/CD for every pull request
-- Configure AL-Go to execute tests during validation workflows
-- Treat failing tests as merge blockers
-- Keep pipeline and project settings aligned (for example `al.code-workspace` and `.AL-Go/settings.json`)
+- Run tests on every pull request; failing tests block the merge.
+- Keep `al.code-workspace` and `.AL-Go/settings.json` aligned.
